@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"github.com/go-kratos/kratos-layout/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 )
@@ -11,13 +12,14 @@ var ProviderSet = wire.NewSet(NewService)
 
 // Service .
 type Service struct {
+	c    *conf.Data
 	repo Repo
 	log  *log.Helper
 }
 
 // NewService .
-func NewService(repo Repo, logger log.Logger) *Service {
-	return &Service{repo: repo, log: log.NewHelper(logger)}
+func NewService(c *conf.Data, repo Repo, logger log.Logger) *Service {
+	return &Service{c: c, repo: repo, log: log.NewHelper(logger)}
 }
 
 func (s *Service) Start(ctx context.Context) error {
