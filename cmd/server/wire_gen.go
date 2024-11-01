@@ -10,6 +10,7 @@ import (
 	"github.com/go-kratos/kratos-layout/internal/biz"
 	"github.com/go-kratos/kratos-layout/internal/conf"
 	"github.com/go-kratos/kratos-layout/internal/data"
+	"github.com/go-kratos/kratos-layout/internal/factory"
 	"github.com/go-kratos/kratos-layout/internal/server"
 	"github.com/go-kratos/kratos-layout/internal/service"
 	"github.com/go-kratos/kratos/v2"
@@ -24,6 +25,10 @@ import (
 
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
+	notifier, err := factory.NewAlert(confData)
+	if err != nil {
+		return nil, nil, err
+	}
 	db, cleanup, err := data.NewDB(confData)
 	if err != nil {
 		return nil, nil, err
@@ -34,7 +39,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 		return nil, nil, err
 	}
 	repo := data.NewRepo(dataData, logger)
-	bizService := biz.NewService(repo, logger)
+	bizService := biz.NewService(confData, notifier, repo, logger)
 	serviceService, cleanup3, err := service.NewService(bizService)
 	if err != nil {
 		cleanup2()

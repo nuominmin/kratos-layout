@@ -5,6 +5,7 @@ import (
 	"github.com/go-kratos/kratos-layout/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
+	"github.com/nuominmin/notifier"
 )
 
 // ProviderSet is biz providers.
@@ -12,14 +13,15 @@ var ProviderSet = wire.NewSet(NewService)
 
 // Service .
 type Service struct {
-	c    *conf.Data
-	repo Repo
-	log  *log.Helper
+	alert notifier.Notifier
+	c     *conf.Data
+	repo  Repo
+	log   *log.Helper
 }
 
 // NewService .
-func NewService(c *conf.Data, repo Repo, logger log.Logger) *Service {
-	return &Service{c: c, repo: repo, log: log.NewHelper(logger)}
+func NewService(c *conf.Data, alert notifier.Notifier, repo Repo, logger log.Logger) *Service {
+	return &Service{c: c, alert: alert, repo: repo, log: log.NewHelper(logger)}
 }
 
 func (s *Service) Start(ctx context.Context) error {
