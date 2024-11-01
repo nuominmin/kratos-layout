@@ -3,21 +3,32 @@
 
 openapi: 3.0.3
 info:
-    title: Greeter API
-    description: The greeting service definition.
+    title: V1 API
     version: 0.0.1
 paths:
-    /helloworld/{name}:
+    /list:
         get:
             tags:
-                - Greeter
-                - subgroup
-            description: Sends a greeting
-            operationId: Greeter_SayHello
+                - V1
+            operationId: V1_List
             parameters:
-                - name: name
-                  in: path
-                  required: true
+                - name: page
+                  in: query
+                  description: |-
+                    page
+
+                     - Required: No
+                     - Default: When empty, query the first page
+                  schema:
+                    type: string
+                - name: size
+                  in: query
+                  description: |-
+                    size
+
+                     - Required: No
+                     - Default: 10
+                     - Size: The number is limited to [0,100]
                   schema:
                     type: string
             responses:
@@ -26,14 +37,33 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/helloworld.v1.HelloReply'
+                                $ref: '#/components/schemas/v1.ListResp'
+    /ping:
+        get:
+            tags:
+                - V1
+            operationId: V1_Ping
+            responses:
+                "200":
+                    description: OK
+                    content: {}
 components:
     schemas:
-        helloworld.v1.HelloReply:
+        v1.ListResp:
             type: object
             properties:
-                message:
+                total:
                     type: string
-            description: The response message containing the greetings
+                    description: 总数
+                dataList:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/v1.ListResp_Data'
+                    description: 查询的结果集
+        v1.ListResp_Data:
+            type: object
+            properties:
+                id:
+                    type: string
 tags:
-    - name: Greeter
+    - name: V1
