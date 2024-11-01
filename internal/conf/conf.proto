@@ -42,4 +42,6 @@ message Data {
   repeated string alert_tokens = 2;
   // database
   Database database = 3;
+  // ethereum rpc
+  string ethereum_endpoint = 4;
 }
