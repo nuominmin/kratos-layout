@@ -2,8 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/go-kratos/kratos-layout/internal/biz"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-kratos/kratos-layout/internal/conf"
 
@@ -80,8 +83,17 @@ func main() {
 	}
 	defer cleanup()
 
+	// Capture exit signal
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-ch
+		fmt.Printf("Received signal %s, shutting down...\n", sig)
+		app.Stop()
+	}()
+
 	// start and wait for stop signal
-	if err := app.Run(); err != nil {
+	if err = app.Run(); err != nil {
 		panic(err)
 	}
 }
