@@ -20,12 +20,12 @@ func NewService(repo Repo, logger log.Logger) *Service {
 	return &Service{repo: repo, log: log.NewHelper(logger)}
 }
 
-func (uc *Service) Start(ctx context.Context) error {
+func (s *Service) Start(ctx context.Context) error {
 	log.Info("starting service")
 	return nil
 }
 
-func (uc *Service) Stop(ctx context.Context) error {
+func (s *Service) Stop(ctx context.Context) error {
 	log.Info("stopping service")
 	return nil
 }

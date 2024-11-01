@@ -10,7 +10,7 @@ type Entity struct {
 }
 
 // Create .
-func (uc *Service) Create(ctx context.Context, g *Entity) (*Entity, error) {
-	uc.log.WithContext(ctx).Infof("Create: %v", g.Hello)
-	return uc.repo.Save(ctx, g)
+func (s *Service) Create(ctx context.Context, g *Entity) (*Entity, error) {
+	s.log.WithContext(ctx).Infof("Create: %v", g.Hello)
+	return s.repo.Save(ctx, g)
 }
