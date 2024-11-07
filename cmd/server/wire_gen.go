@@ -29,19 +29,23 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	db, cleanup, err := data.NewDB(confData)
-	if err != nil {
-		return nil, nil, err
-	}
-	dataData, cleanup2, err := data.NewData(db, logger)
+	workerPoolManager, cleanup := factory.NewNewWorkerPool()
+	db, cleanup2, err := data.NewDB(confData)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	repo := data.NewRepo(dataData, logger)
-	bizService := biz.NewService(confData, notifier, repo, logger)
-	serviceService, cleanup3, err := service.NewService(bizService)
+	dataData, cleanup3, err := data.NewData(db, logger)
 	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	repo := data.NewRepo(dataData, logger)
+	bizService := biz.NewService(confData, notifier, workerPoolManager, repo, logger)
+	serviceService, cleanup4, err := service.NewService(bizService)
+	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -49,6 +53,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	httpServer := server.NewHTTPServer(confServer, serviceService)
 	app := newApp(logger, httpServer, bizService)
 	return app, func() {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
