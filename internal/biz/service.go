@@ -4,6 +4,11 @@ import (
 	"context"
 )
 
+// Repo .
+type Repo interface {
+	Save(context.Context, *Entity) (*Entity, error)
+}
+
 // Entity is a entity model.
 type Entity struct {
 	Hello string
