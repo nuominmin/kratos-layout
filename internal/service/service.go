@@ -7,6 +7,8 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/wire"
+	"github.com/nuominmin/biz/captcha"
+	"github.com/nuominmin/biz/krs/authorization/jwt"
 )
 
 // ProviderSet is service providers.
@@ -16,13 +18,24 @@ var ProviderSet = wire.NewSet(NewService)
 type Service struct {
 	pb.UnimplementedV1Server
 
-	svc *biz.Service
+	svc        *biz.Service
+	captchaSvc captcha.Service
+	jwtSvc     jwt.Service
+	log        *log.Helper
 }
 
 // NewService new a service.
-func NewService(svc *biz.Service) (s *Service, cf func(), err error) {
+func NewService(
+	svc *biz.Service,
+	captchaSvc captcha.Service,
+	jwtSvc jwt.Service,
+	logger log.Logger,
+) (s *Service, cf func(), err error) {
 	s = &Service{
-		svc: svc,
+		svc:        svc,
+		captchaSvc: captchaSvc,
+		jwtSvc:     jwtSvc,
+		log:        log.NewHelper(logger),
 	}
 
 	return s, s.Close, nil

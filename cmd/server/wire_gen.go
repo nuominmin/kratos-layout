@@ -25,10 +25,6 @@ import (
 
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
-	notifier, err := factory.NewAlert(confData)
-	if err != nil {
-		return nil, nil, err
-	}
 	workerPoolManager, cleanup := factory.NewNewWorkerPool()
 	db, cleanup2, err := data.NewDB(confData)
 	if err != nil {
@@ -42,8 +38,10 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 		return nil, nil, err
 	}
 	repo := data.NewRepo(dataData, logger)
-	bizService := biz.NewService(confData, notifier, workerPoolManager, repo, logger)
-	serviceService, cleanup4, err := service.NewService(bizService)
+	bizService := biz.NewService(confData, workerPoolManager, repo, logger)
+	captchaService := factory.NewCaptcha()
+	jwtService := factory.NewJwt(confData)
+	serviceService, cleanup4, err := service.NewService(bizService, captchaService, jwtService, logger)
 	if err != nil {
 		cleanup3()
 		cleanup2()

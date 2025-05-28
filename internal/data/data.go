@@ -1,15 +1,13 @@
 package data
 
 import (
-	"database/sql"
+	"fmt"
 	"github.com/go-kratos/kratos-layout/internal/conf"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-	"time"
-
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
+	gormhelper "github.com/nuominmin/gorm-helper"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // ProviderSet is data providers.
@@ -29,6 +27,7 @@ func NewData(db *gorm.DB, logger log.Logger) (*Data, func(), error) {
 		db: db,
 	}, cleanup, nil
 }
+
 func NewDB(c *conf.Data) (*gorm.DB, func(), error) {
 	db, cleanup, err := newDB(c.Database)
 	if err != nil {
@@ -44,40 +43,26 @@ func NewDB(c *conf.Data) (*gorm.DB, func(), error) {
 }
 
 func newDB(database *conf.Data_Database) (*gorm.DB, func(), error) {
-	db, err := gorm.Open(mysql.Open(database.Source), &gorm.Config{})
+	var db *gorm.DB
+	var cleanup func()
+	var err error
+	opts := []gormhelper.ConnOption{
+		gormhelper.WithConnLogLevel(logger.LogLevel(database.LogLevel)),
+		gormhelper.WithMaxIdleConns(int(database.MaxIdleConns)),
+		gormhelper.WithMaxOpenConns(int(database.MaxOpenConns)),
+		gormhelper.WithConnMaxLifetime(database.ConnMaxLifetime.AsDuration()),
+	}
+
+	switch database.Driver {
+	case "mysql":
+		db, cleanup, err = gormhelper.ConnectMysql(database.Source, opts...)
+	case "sqlite":
+		db, cleanup, err = gormhelper.ConnectSqlite(database.Source, opts...)
+	default:
+		return nil, func() {}, fmt.Errorf("unsupported driver %s", database.Driver)
+	}
 	if err != nil {
 		return nil, nil, err
-	}
-
-	// Setting the log Level
-	db.Logger = db.Logger.LogMode(logger.LogLevel(database.LogLevel))
-
-	// Set database configuration
-	var sqlDB *sql.DB
-	if sqlDB, err = db.DB(); err != nil {
-		return nil, nil, err
-	}
-
-	if database.MaxIdleConns != 0 {
-		sqlDB.SetMaxIdleConns(int(database.MaxIdleConns))
-	} else {
-		sqlDB.SetMaxIdleConns(10)
-	}
-
-	if database.MaxOpenConns != 0 {
-		sqlDB.SetMaxOpenConns(int(database.MaxOpenConns))
-	} else {
-		sqlDB.SetMaxOpenConns(100)
-	}
-
-	if database.ConnMaxLifetime != nil {
-		sqlDB.SetConnMaxLifetime(database.ConnMaxLifetime.AsDuration())
-	} else {
-		sqlDB.SetConnMaxLifetime(time.Second * 300)
-	}
-
-	cleanup := func() {
-		_ = sqlDB.Close()
 	}
 
 	return db, cleanup, err
